@@ -110,3 +110,47 @@ export const removeStock =
   }
 );
 };
+export const getInventoryHistory =
+  async () => {
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "inventoryHistory"
+        )
+      );
+
+    return snapshot.docs.map(
+      (doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })
+    );
+};
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+} from "firebase/firestore";
+
+// historial inventario
+export const getInventoryHistory =
+  async () => {
+
+    const q = query(
+      collection(db, "inventory_history"),
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot =
+      await getDocs(q);
+
+    return snapshot.docs.map(
+      (doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })
+    );
+};
