@@ -43,12 +43,6 @@ export const loginSeller = async (pin) => {
     throw new Error("PIN incorrecto");
   }
 };
-export const logoutUser =
-  async () => {
-
-    await auth.signOut();
-
-};
 import { signOut } from "firebase/auth";
 
 // cerrar sesión
