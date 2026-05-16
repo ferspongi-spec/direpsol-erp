@@ -2,11 +2,12 @@ import {
   getFirestore,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   increment,
   collection,
-addDoc,
+  addDoc,
 } from "firebase/firestore";
 
 import app from "../firebase/config";
@@ -120,32 +121,6 @@ export const getInventoryHistory =
           "inventoryHistory"
         )
       );
-
-    return snapshot.docs.map(
-      (doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })
-    );
-};
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-} from "firebase/firestore";
-
-// historial inventario
-export const getInventoryHistory =
-  async () => {
-
-    const q = query(
-      collection(db, "inventory_history"),
-      orderBy("createdAt", "desc")
-    );
-
-    const snapshot =
-      await getDocs(q);
 
     return snapshot.docs.map(
       (doc) => ({
