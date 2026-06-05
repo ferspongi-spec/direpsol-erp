@@ -1,16 +1,32 @@
-import { useEffect, useState } from "react";
-import { getSales } from "../services/salesService";
-import { getInventory } from "../services/inventoryService";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
+import Layout from "../components/Layout";
 
 import {
-  logoutUser,
-} from "../services/authService";
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  getSales,
+} from "../services/salesService";
+
+import {
+  getExpenses,
+} from "../services/expenseService";
+
+import {
+  getProducts,
+} from "../services/productService";
+
+import * as XLSX from "xlsx";
+
+import { saveAs } from "file-saver";
 
 import jsPDF from "jspdf";
+
 import autoTable from "jspdf-autotable";
+
 import {
   BarChart,
   Bar,
@@ -21,493 +37,768 @@ import {
   Cell,
 } from "recharts";
 
+import {
+  DollarSign,
+  Package,
+  ShoppingCart,
+} from "lucide-react";
+
 function DashboardPage() {
-const navigate =
-  useNavigate();
-  const [sales, setSales] = useState([]);
-const [inventory, setInventory] = useState([]);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
 
- useEffect(() => {
+  const [sales, setSales] =
+    useState([]);
 
-  loadSales();
+  const [expenses, setExpenses] =
+    useState([]);
 
-  loadInventory();
+  const [inventory, setInventory] =
+    useState([]);
 
-}, []);
+  const [fromDate, setFromDate] =
+    useState("");
 
-  // cargar ventas
-  const loadSales = async () => {
+  const [toDate, setToDate] =
+    useState("");
 
-    try {
+  const [search, setSearch] =
+    useState("");
 
-      const data = await getSales();
+  useEffect(() => {
 
-      setSales(data);
+    loadSales();
 
-    } catch (error) {
+    loadInventory();
 
-      console.log(error);
+    const interval =
+      setInterval(() => {
 
-    }
-  };
-const loadInventory = async () => {
+        loadSales();
 
-  try {
+        loadInventory();
 
-    const data =
-      await getInventory();
+      }, 5000);
 
-    setInventory(data);
+    return () =>
+      clearInterval(interval);
 
-  } catch (error) {
+  }, []);
 
-    console.log(error);
+  // cargar ventas y gastos
+  const loadSales =
+    async () => {
 
-  }
-};
+      try {
+
+        const salesData =
+          await getSales();
+
+        const expensesData =
+          await getExpenses();
+
+        setSales(
+          salesData
+        );
+
+        setExpenses(
+          expensesData
+        );
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
+
+  // cargar productos
+  const loadInventory =
+    async () => {
+
+      try {
+
+        const data =
+          await getProducts();
+
+        setInventory(data);
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
+
   // exportar excel
-  const exportToExcel = () => {
+  const exportToExcel =
+    () => {
 
-    const data = filteredSales.map(
-      (sale) => ({
-        Tipo: sale.type,
-        Cantidad: sale.quantity || 1,
-        Monto: sale.amount,
-        Pago: sale.payment,
-        Vendedor: sale.vendor,
-      })
-    );
+      const data =
+        filteredSales.map(
+          (sale) => ({
 
-    const worksheet =
-      XLSX.utils.json_to_sheet(data);
+            Tipo:
+              sale.type,
 
-    const workbook =
-      XLSX.utils.book_new();
+            Cantidad:
+              sale.quantity || 1,
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Ventas"
-    );
+            Monto:
+              sale.amount,
 
-    const excelBuffer =
-      XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
+            Pago:
+              sale.payment,
+
+            Vendedor:
+              sale.vendor,
+
+          })
+        );
+
+      const worksheet =
+        XLSX.utils.json_to_sheet(
+          data
+        );
+
+      const workbook =
+        XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Ventas"
+      );
+
+      const excelBuffer =
+        XLSX.write(
+          workbook,
+          {
+            bookType: "xlsx",
+            type: "array",
+          }
+        );
+
+      const fileData =
+        new Blob(
+          [excelBuffer],
+          {
+            type:
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          }
+        );
+
+      saveAs(
+        fileData,
+        "ventas-direpsol.xlsx"
+      );
+
+    };
+
+  // exportar pdf
+  const exportToPDF =
+    () => {
+
+      const doc =
+        new jsPDF();
+
+      doc.setFontSize(18);
+
+      doc.text(
+        "Reporte DIREPSOL",
+        14,
+        20
+      );
+
+      const tableData =
+        filteredSales.map(
+          (sale) => [
+
+            sale.type,
+
+            sale.quantity || 1,
+
+            `S/ ${sale.amount}`,
+
+            sale.payment,
+
+            sale.vendor,
+
+            sale.createdAt
+              ?.toDate()
+              .toLocaleDateString(),
+
+            sale.createdAt
+              ?.toDate()
+              .toLocaleTimeString(),
+
+          ]
+        );
+
+      autoTable(doc, {
+
+        startY: 30,
+
+        head: [[
+          "Tipo",
+          "Cantidad",
+          "Monto",
+          "Pago",
+          "Vendedor",
+          "Fecha",
+          "Hora",
+        ]],
+
+        body:
+          tableData,
+
       });
 
-    const fileData = new Blob(
-      [excelBuffer],
-      {
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      doc.save(
+        "reporte-direpsol.pdf"
+      );
+
+    };
+
+  // filtro ventas
+  const filteredSales =
+    sales.filter(
+      (sale) => {
+
+        if (!sale.createdAt)
+          return false;
+
+        const saleDate =
+          sale.createdAt.toDate();
+
+        const from =
+          fromDate
+            ? new Date(fromDate)
+            : null;
+
+        const to =
+          toDate
+            ? new Date(toDate)
+            : null;
+
+        if (
+          from &&
+          saleDate < from
+        )
+          return false;
+
+        if (to) {
+
+          to.setHours(
+            23,
+            59,
+            59
+          );
+
+          if (
+            saleDate > to
+          )
+            return false;
+
+        }
+
+        const searchText =
+          `
+          ${sale.type}
+          ${sale.vendor}
+          ${sale.payment}
+          ${sale.clientName || ""}
+        `
+            .toLowerCase();
+
+        return searchText.includes(
+          search.toLowerCase()
+        );
+
       }
     );
 
-    saveAs(
-      fileData,
-      "ventas-direpsol.xlsx"
+  // ventas hoy
+  const todaySales =
+    filteredSales.filter(
+      (sale) => {
+
+        if (!sale.createdAt)
+          return false;
+
+        const today =
+          new Date();
+
+        const saleDate =
+          sale.createdAt.toDate();
+
+        return (
+          saleDate.toDateString() ===
+          today.toDateString()
+        );
+
+      }
     );
-  };
 
-  // exportar PDF
-  const exportToPDF = () => {
-
-    const doc = new jsPDF();
-
-    doc.setFontSize(18);
-
-    doc.text(
-      "Reporte DIREPSOL",
-      14,
-      20
+  // totales
+  const totalToday =
+    todaySales.reduce(
+      (acc, sale) =>
+        acc + sale.amount,
+      0
     );
 
-    const tableData =
-      filteredSales.map((sale) => [
-
-        sale.type,
-
-        sale.quantity || 1,
-
-        `S/ ${sale.amount}`,
-
-        sale.payment,
-
-        sale.vendor,
-
-        sale.createdAt
-          ?.toDate()
-          .toLocaleDateString(),
-
-        sale.createdAt
-          ?.toDate()
-          .toLocaleTimeString(),
-
-      ]);
-
-    autoTable(doc, {
-
-      startY: 30,
-
-      head: [[
-        "Tipo",
-        "Cantidad",
-        "Monto",
-        "Pago",
-        "Vendedor",
-        "Fecha",
-        "Hora",
-      ]],
-
-      body: tableData,
-
-    });
-
-    doc.save(
-      "reporte-direpsol.pdf"
+  const totalSales =
+    filteredSales.reduce(
+      (acc, sale) =>
+        acc + sale.amount,
+      0
     );
-  };
 
-  // filtro fechas
-  const filteredSales = sales.filter(
+  const totalExpenses =
+    expenses.reduce(
+      (acc, expense) =>
+        acc + expense.amount,
+      0
+    );
+
+  const netProfit =
+    totalSales -
+    totalExpenses;
+
+  // promedio ticket
+  const averageTicket =
+    filteredSales.length > 0
+      ? (
+          totalSales /
+          filteredSales.length
+        ).toFixed(2)
+      : 0;
+
+  // pago top
+  const paymentStats = {};
+
+  filteredSales.forEach(
+    (sale) => {
+
+      paymentStats[
+        sale.payment
+      ] =
+        (
+          paymentStats[
+            sale.payment
+          ] || 0
+        ) + 1;
+
+    }
+  );
+
+  const topPayment =
+    Object.keys(
+      paymentStats
+    ).reduce(
+      (a, b) =>
+        paymentStats[a] >
+        paymentStats[b]
+          ? a
+          : b,
+      "-"
+    );
+
+  // top cliente
+  const clientStats = {};
+
+  filteredSales.forEach(
+    (sale) => {
+
+      if (!sale.clientName)
+        return;
+
+      clientStats[
+        sale.clientName
+      ] =
+        (
+          clientStats[
+            sale.clientName
+          ] || 0
+        ) + 1;
+
+    }
+  );
+
+  const topClient =
+    Object.keys(
+      clientStats
+    ).reduce(
+      (a, b) =>
+        clientStats[a] >
+        clientStats[b]
+          ? a
+          : b,
+      "-"
+    );
+
+  // top vendedor
+  const sellerStats = {};
+
+  filteredSales.forEach(
+    (sale) => {
+
+      sellerStats[
+        sale.vendor
+      ] =
+        (
+          sellerStats[
+            sale.vendor
+          ] || 0
+        ) + 1;
+
+    }
+  );
+
+  const topSeller =
+    Object.keys(
+      sellerStats
+    ).reduce(
+      (a, b) =>
+        sellerStats[a] >
+        sellerStats[b]
+          ? a
+          : b,
+      "-"
+    );
+
+  // alertas stock
+  useEffect(() => {
+
+    const critical =
+      inventory.filter(
+        (item) =>
+          item.stock <= 5
+      );
+
+    if (
+      critical.length > 0
+    ) {
+
+      toast.error(
+        "⚠️ Hay productos con stock crítico"
+      );
+
+    }
+
+  }, [inventory]);
+
+  // ventas mensuales
+  const monthlySales = {};
+
+  filteredSales.forEach(
     (sale) => {
 
       if (!sale.createdAt)
-        return false;
+        return;
 
-      const saleDate =
+      const date =
         sale.createdAt.toDate();
 
-      const from =
-        fromDate
-          ? new Date(fromDate)
-          : null;
+      const month =
+        date.toLocaleString(
+          "es-PE",
+          {
+            month: "short",
+          }
+        );
 
-      const to =
-        toDate
-          ? new Date(toDate)
-          : null;
+      monthlySales[
+        month
+      ] =
+        (
+          monthlySales[
+            month
+          ] || 0
+        ) + sale.amount;
 
-      if (from && saleDate < from)
-        return false;
-
-      if (to) {
-
-        to.setHours(23, 59, 59);
-
-        if (saleDate > to)
-          return false;
-      }
-
-      return true;
     }
   );
-const chartData = [
 
-  {
-    name: "10kg",
+  const monthlyChartData =
+    Object.keys(
+      monthlySales
+    ).map(
+      (month) => ({
 
-    ventas:
-      filteredSales
-        .filter(
-          (sale) =>
-            sale.type === "10kg"
-        )
-        .reduce(
-          (acc, sale) =>
-            acc + (sale.quantity || 1),
-          0
-        ),
-  },
+        month,
 
-  {
-    name: "45kg",
+        total:
+          monthlySales[
+            month
+          ],
 
-    ventas:
-      filteredSales
-        .filter(
-          (sale) =>
-            sale.type === "45kg"
-        )
-        .reduce(
-          (acc, sale) =>
-            acc + (sale.quantity || 1),
-          0
-        ),
-  },
+      })
+    );
 
-];
-const handleLogout =
-  async () => {
+  // chart productos
+  const chartData =
+    inventory.map(
+      (product) => ({
 
-    await logoutUser();
+        name:
+          product.name,
 
-    localStorage.removeItem("user");
+        ventas:
+          filteredSales
+            .filter(
+              (sale) =>
+                sale.type ===
+                product.name
+            )
+            .reduce(
+              (acc, sale) =>
+                acc +
+                (sale.quantity || 1),
+              0
+            ),
 
-    navigate("/");
+      })
+    );
 
-};
   return (
 
-    <div className="min-h-screen bg-gray-100 p-6">
+    <Layout>
 
-      <h1 className="text-3xl font-bold text-blue-900 mb-6">
-        Dashboard DIREPSOL
-      </h1>
-<button
-  onClick={handleLogout}
-  className="bg-red-600 text-white px-4 py-2 rounded mb-6"
->
-  Cerrar Sesión
-</button>
-      {/* filtros fecha */}
-      <div className="flex gap-4 mb-6">
+      <div className="min-h-screen bg-gray-100 p-6">
 
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(e) =>
-            setFromDate(e.target.value)
-          }
-          className="border p-2 rounded"
-        />
+        {/* header */}
+        <div className="flex items-center justify-between mb-8">
 
-        <input
-          type="date"
-          value={toDate}
-          onChange={(e) =>
-            setToDate(e.target.value)
-          }
-          className="border p-2 rounded"
-        />
+          <div>
 
-      </div>
+            <h1 className="text-4xl font-bold text-gray-800">
+              Dashboard
+            </h1>
 
-      {/* botones */}
-      <div className="flex gap-4 mb-6">
+            <p className="text-gray-500 mt-2">
+              Resumen general DIREPSOL
+            </p>
 
-        <button
-          onClick={exportToExcel}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Exportar Excel
-        </button>
+          </div>
 
-        <button
-          onClick={exportToPDF}
-          className="bg-red-600 text-white px-4 py-2 rounded"
-        >
-          Exportar PDF
-        </button>
+          <div className="bg-white px-6 py-4 rounded-2xl shadow-sm border border-gray-100">
 
-      </div>
+            <p className="text-gray-500 text-sm">
+              Fecha actual
+            </p>
 
-      {/* resumen */}
-      <div className="mb-6 space-y-2">
+            <p className="font-bold text-lg text-gray-800">
 
-  {inventory
-    .filter((item) => item.stock <= 10)
-    .map((item) => (
+              {
+                new Date().toLocaleDateString()
+              }
 
-      <div
-        key={item.id}
-        className="bg-red-100 text-red-700 p-3 rounded font-bold"
-      >
+            </p>
 
-        ⚠️ Stock bajo {item.type}: {item.stock} unidades
-
-      </div>
-
-    ))}
-
-</div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-
-        <div className="bg-white rounded-xl p-6 shadow">
-
-          <h2 className="text-gray-500">
-            Ventas Totales
-          </h2>
-
-          <p className="text-3xl font-bold text-orange-500">
-            {filteredSales.length}
-          </p>
+          </div>
 
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow">
+        {/* buscador */}
+        <input
+          type="text"
+          placeholder="Buscar cliente, vendedor o producto..."
+          value={search}
+          onChange={(e) =>
+            setSearch(
+              e.target.value
+            )
+          }
+          className="border border-gray-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 w-full mb-6"
+        />
 
-          <h2 className="text-gray-500">
-            Monto Total
-          </h2>
+        {/* filtros */}
+        <div className="flex gap-4 mb-6">
 
-          <p className="text-3xl font-bold text-green-600">
-
-            S/ {
-              filteredSales.reduce(
-                (acc, sale) =>
-                  acc + sale.amount,
-                0
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) =>
+              setFromDate(
+                e.target.value
               )
             }
+            className="border border-gray-200 rounded-xl p-3 bg-white"
+          />
 
-          </p>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) =>
+              setToDate(
+                e.target.value
+              )
+            }
+            className="border border-gray-200 rounded-xl p-3 bg-white"
+          />
 
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow">
+        {/* botones */}
+        <div className="flex gap-4 mb-6">
 
-          <h2 className="text-gray-500">
-            GLP Registrado
-          </h2>
+          <button
+            onClick={exportToExcel}
+            className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-semibold"
+          >
+            Exportar Excel
+          </button>
 
-          <p className="text-3xl font-bold text-blue-600">
+          <button
+            onClick={exportToPDF}
+            className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-semibold"
+          >
+            Exportar PDF
+          </button>
 
-            {filteredSales.reduce(
-              (acc, sale) =>
-                acc + (sale.quantity || 1),
-              0
-            )}
+        </div>
 
-          </p>
+        {/* alertas */}
+        {
+          inventory.filter(
+            (item) =>
+              item.stock <= 10
+          ).length > 0 && (
+
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl p-6 shadow-lg mb-8">
+
+              <h2 className="text-2xl font-bold mb-4">
+                ⚠️ Alertas Stock
+              </h2>
+
+              <div className="space-y-3">
+
+                {
+                  inventory
+                    .filter(
+                      (item) =>
+                        item.stock <= 10
+                    )
+                    .map(
+                      (item) => (
+
+                        <div
+                          key={item.id}
+                          className="bg-white/10 p-4 rounded-xl flex justify-between"
+                        >
+
+                          <div>
+
+                            <p className="font-bold text-lg">
+                              {item.name}
+                            </p>
+
+                            <p className="text-red-100">
+                              Stock crítico
+                            </p>
+
+                          </div>
+
+                          <div className="text-3xl font-bold">
+
+                            {item.stock}
+
+                          </div>
+
+                        </div>
+
+                      )
+                    )
+                }
+
+              </div>
+
+            </div>
+
+          )
+        }
+
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border">
+
+            <p className="text-gray-500">
+              Ventas Totales
+            </p>
+
+            <h2 className="text-4xl font-bold mt-2">
+
+              {filteredSales.length}
+
+            </h2>
+
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border">
+
+            <p className="text-gray-500">
+              Ingresos
+            </p>
+
+            <h2 className="text-4xl font-bold text-green-600 mt-2">
+
+              S/ {totalSales}
+
+            </h2>
+
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border">
+
+            <p className="text-gray-500">
+              Gastos
+            </p>
+
+            <h2 className="text-4xl font-bold text-red-600 mt-2">
+
+              S/ {totalExpenses}
+
+            </h2>
+
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border">
+
+            <p className="text-gray-500">
+              Utilidad
+            </p>
+
+            <h2 className="text-4xl font-bold text-blue-600 mt-2">
+
+              S/ {netProfit}
+
+            </h2>
+
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border">
+
+            <p className="text-gray-500">
+              Ventas Hoy
+            </p>
+
+            <h2 className="text-4xl font-bold text-orange-500 mt-2">
+
+              S/ {totalToday}
+
+            </h2>
+
+          </div>
 
         </div>
 
       </div>
 
-      {/* tabla */}
-      <div className="bg-white rounded-xl shadow p-6 mb-8">
+    </Layout>
 
-  <h2 className="text-2xl font-bold mb-4">
-    Ventas por Tipo GLP
-  </h2>
-
-  <ResponsiveContainer
-    width="100%"
-    height={300}
-  >
-
-    <BarChart data={chartData}>
-
-      <XAxis dataKey="name" />
-
-      <YAxis />
-
-      <Tooltip />
-
-     <Bar
-  dataKey="ventas"
->
-
-  <Cell fill="#f97316" />
-  <Cell fill="#2563eb" />
-
-</Bar>
-
-    </BarChart>
-
-  </ResponsiveContainer>
-
-</div>
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-
-        <table className="w-full">
-
-          <thead className="bg-blue-900 text-white">
-
-            <tr>
-
-              <th className="p-4 text-left">
-                Tipo
-              </th>
-
-              <th className="p-4 text-left">
-                Cantidad
-              </th>
-
-              <th className="p-4 text-left">
-                Monto
-              </th>
-
-              <th className="p-4 text-left">
-                Pago
-              </th>
-
-              <th className="p-4 text-left">
-                Vendedor
-              </th>
-
-              <th className="p-4 text-left">
-                Fecha
-              </th>
-
-              <th className="p-4 text-left">
-                Hora
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {filteredSales.map((sale) => (
-
-              <tr
-                key={sale.id}
-                className="border-b"
-              >
-
-                <td className="p-4">
-                  {sale.type}
-                </td>
-
-              <td className="p-4">
-                  {sale.quantity || 1}
-                 </td>
-
-                <td className="p-4">
-                  S/ {sale.amount}
-                </td>
-
-                <td className="p-4">
-                  {sale.payment}
-                </td>
-
-                <td className="p-4">
-                  {sale.vendor}
-                </td>
-
-                <td className="p-4">
-
-                  {sale.createdAt
-                    ?.toDate()
-                    .toLocaleDateString()}
-
-                </td>
-
-                <td className="p-4">
-
-                  {sale.createdAt
-                    ?.toDate()
-                    .toLocaleTimeString()}
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
   );
 }
 

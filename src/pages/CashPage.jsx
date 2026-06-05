@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSales } from "../services/salesService";
-
+import Layout from "../components/Layout";
 function CashPage() {
   const [sales, setSales] = useState([]);
 
@@ -32,6 +32,7 @@ function CashPage() {
   );
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-100 p-6">
 
       <h1 className="text-3xl font-bold text-blue-900 mb-6">
@@ -87,6 +88,7 @@ function CashPage() {
       </div>
 
     </div>
+    </Layout>
   );
 }
 

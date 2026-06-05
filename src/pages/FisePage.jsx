@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import Layout from "../components/Layout";
 import {
   createFise,
   getFise,
@@ -78,7 +78,7 @@ if (image) {
   };
 
   return (
-
+<Layout>
     <div className="min-h-screen bg-gray-100 p-6">
 
       <h1 className="text-3xl font-bold text-blue-900 mb-6">
@@ -266,7 +266,7 @@ if (image) {
       </div>
 
     </div>
-
+</Layout>
   );
 }
 

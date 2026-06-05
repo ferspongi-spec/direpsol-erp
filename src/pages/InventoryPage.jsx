@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
 
+import Layout from "../components/Layout";
+
 import {
-  getInventory,
   addStock,
   getInventoryHistory,
 } from "../services/inventoryService";
 
+import {
+  getProducts,
+} from "../services/productService";
+
 function InventoryPage() {
 
-  const [stock10, setStock10] =
-    useState(0);
-
-  const [stock45, setStock45] =
-    useState(0);
+  const [products, setProducts] =
+    useState([]);
 
   const [type, setType] =
-    useState("10kg");
+    useState("");
 
   const [quantity, setQuantity] =
     useState("");
@@ -37,29 +39,36 @@ function InventoryPage() {
   const loadInventory =
     async () => {
 
-      const data10 =
-        await getInventory("10kg");
+      const data =
+        await getProducts();
 
-      const data45 =
-        await getInventory("45kg");
+      setProducts(data);
 
-      setStock10(
-        data10.stock || 0
-      );
+      if (data.length > 0) {
 
-      setStock45(
-        data45.stock || 0
-      );
-  };
+        setType(data[0].name);
+
+      }
+
+    };
 
   const loadHistory =
     async () => {
 
-      const data =
-        await getInventoryHistory();
+      try {
 
-      setHistory(data);
-  };
+        const data =
+          await getInventoryHistory();
+
+        setHistory(data);
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
 
   const handleAddStock =
     async () => {
@@ -79,187 +88,262 @@ function InventoryPage() {
       loadInventory();
 
       loadHistory();
-  };
+
+    };
 
   return (
 
-    <div className="min-h-screen bg-gray-100 p-6">
+    <Layout>
 
-      <h1 className="text-3xl font-bold text-blue-900 mb-6">
-        Inventario GLP
-      </h1>
+      <div className="min-h-screen bg-gray-100 p-6">
 
-      {/* ingreso stock */}
+        <h1 className="text-3xl font-bold text-blue-900 mb-6">
+          Inventario
+        </h1>
 
-      <div className="bg-white p-6 rounded-xl shadow mb-8 max-w-md space-y-4">
+        {/* ingreso stock */}
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8 max-w-lg">
 
-        <h2 className="text-2xl font-bold">
-          Ingreso de Stock
-        </h2>
+          <div className="mb-6">
 
-        <select
-          value={type}
-          onChange={(e) =>
-            setType(e.target.value)
-          }
-          className="w-full border p-3 rounded"
-        >
+            <h2 className="text-3xl font-bold text-gray-800">
+              Ingreso de Stock
+            </h2>
 
-          <option value="10kg">
-            GLP 10 Kg
-          </option>
+            <p className="text-gray-500 mt-1">
+              Registrar entrada de productos
+            </p>
 
-          <option value="45kg">
-            GLP 45 Kg
-          </option>
+          </div>
 
-        </select>
+          <div className="space-y-4">
 
-        <input
-          type="number"
-          placeholder="Cantidad"
-          value={quantity}
-          onChange={(e) =>
-            setQuantity(e.target.value)
-          }
-          className="w-full border p-3 rounded"
-        />
+            <select
+              value={type}
+              onChange={(e) =>
+                setType(e.target.value)
+              }
+              className="w-full border border-gray-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
 
-        <input
-          type="text"
-          placeholder="Proveedor"
-          value={supplier}
-          onChange={(e) =>
-            setSupplier(e.target.value)
-          }
-          className="w-full border p-3 rounded"
-        />
+              {
+                products.map(
+                  (product) => (
 
-        <button
-          onClick={handleAddStock}
-          className="w-full bg-green-600 text-white p-3 rounded font-bold"
-        >
-          Agregar Stock
-        </button>
+                    <option
+                      key={product.id}
+                      value={product.name}
+                    >
 
-      </div>
+                      {product.name}
 
-      {/* tarjetas stock */}
+                    </option>
 
-      <div className="grid md:grid-cols-2 gap-6">
+                  )
+                )
+              }
 
-        {/* 10kg */}
+            </select>
 
-        <div className="bg-white p-6 rounded-xl shadow">
+            <input
+              type="number"
+              placeholder="Cantidad"
+              value={quantity}
+              onChange={(e) =>
+                setQuantity(
+                  e.target.value
+                )
+              }
+              className="w-full border border-gray-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
 
-          <h2 className="text-2xl font-bold mb-4">
-            GLP 10 Kg
-          </h2>
+            <input
+              type="text"
+              placeholder="Proveedor"
+              value={supplier}
+              onChange={(e) =>
+                setSupplier(
+                  e.target.value
+                )
+              }
+              className="w-full border border-gray-200 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
 
-          <p className="text-4xl text-orange-500 font-bold">
-            {stock10}
-          </p>
+            <button
+              onClick={handleAddStock}
+              className="w-full bg-green-600 hover:bg-green-700 transition text-white p-4 rounded-xl font-bold"
+            >
+              Agregar Stock
+            </button>
 
-        </div>
-
-        {/* 45kg */}
-
-        <div className="bg-white p-6 rounded-xl shadow">
-
-          <h2 className="text-2xl font-bold mb-4">
-            GLP 45 Kg
-          </h2>
-
-          <p className="text-4xl text-blue-600 font-bold">
-            {stock45}
-          </p>
+          </div>
 
         </div>
 
-      </div>
+        {/* productos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
-      {/* historial */}
+          {
+            products.map(
+              (product) => (
 
-      <div className="bg-white rounded-xl shadow mt-8 overflow-hidden">
+                <div
+                  key={product.id}
+                  className={`${
+                    product.stock <= 10
+                      ? "bg-red-50 border-red-300"
+                      : "bg-white border-gray-100"
+                  } rounded-2xl p-6 shadow-sm border hover:shadow-xl hover:-translate-y-1 transition duration-300`}
+                >
 
-        <h2 className="text-2xl font-bold p-6">
-          Historial Inventario
-        </h2>
+                  <div className="flex items-center justify-between">
 
-        <table className="w-full">
+                    <div>
 
-          <thead className="bg-blue-900 text-white">
+                      <p className="text-gray-500">
+                        {product.name}
+                      </p>
 
-            <tr>
+                      <h2 className="text-5xl font-bold text-blue-600 mt-2">
 
-              <th className="p-4 text-left">
-                Movimiento
-              </th>
+                        {product.stock}
 
-              <th className="p-4 text-left">
-                Tipo
-              </th>
+                      </h2>
 
-              <th className="p-4 text-left">
-                Cantidad
-              </th>
+                      <p className="text-sm text-gray-400 mt-2">
 
-              <th className="p-4 text-left">
-                Usuario
-              </th>
+                        {product.category}
 
-              <th className="p-4 text-left">
-                Fecha
-              </th>
+                      </p>
 
-            </tr>
+                    </div>
 
-          </thead>
+                    <div className="bg-blue-100 p-4 rounded-xl">
 
-          <tbody>
+                      <span className="text-3xl">
+                        📦
+                      </span>
 
-            {history.map((item) => (
+                    </div>
 
-              <tr
-                key={item.id}
-                className="border-b"
-              >
+                  </div>
 
-                <td className="p-4">
-                  {item.movement}
-                </td>
+                </div>
 
-                <td className="p-4">
-                  {item.type}
-                </td>
+              )
+            )
+          }
 
-                <td className="p-4">
-                  {item.quantity}
-                </td>
+        </div>
 
-                <td className="p-4">
-                  {item.user}
-                </td>
+        {/* historial */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                <td className="p-4">
+          <div className="p-6 border-b">
 
-                  {item.createdAt
-                    ?.toDate()
-                    .toLocaleString()}
+            <h2 className="text-2xl font-bold text-gray-800">
+              Historial Inventario
+            </h2>
 
-                </td>
+          </div>
+
+          <table className="w-full">
+
+            <thead className="bg-gray-50 text-gray-700">
+
+              <tr>
+
+                <th className="p-4 text-left font-semibold">
+                  Movimiento
+                </th>
+
+                <th className="p-4 text-left font-semibold">
+                  Tipo
+                </th>
+
+                <th className="p-4 text-left font-semibold">
+                  Cantidad
+                </th>
+
+                <th className="p-4 text-left font-semibold">
+                  Proveedor
+                </th>
+
+                <th className="p-4 text-left font-semibold">
+                  Usuario
+                </th>
+
+                <th className="p-4 text-left font-semibold">
+                  Fecha
+                </th>
 
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {history.map((item) => (
+
+                <tr
+                  key={item.id}
+                  className="border-b hover:bg-gray-50 transition"
+                >
+
+                  <td className="p-4">
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-white text-sm ${
+                        item.movement === "entrada"
+                          ? "bg-green-500"
+                          : "bg-red-500"
+                      }`}
+                    >
+
+                      {item.movement}
+
+                    </span>
+
+                  </td>
+
+                  <td className="p-4">
+                    {item.type}
+                  </td>
+
+                  <td className="p-4">
+                    {item.quantity}
+                  </td>
+
+                  <td className="p-4">
+                    {item.supplier || "-"}
+                  </td>
+
+                  <td className="p-4">
+                    {item.user}
+                  </td>
+
+                  <td className="p-4">
+
+                    {item.createdAt
+                      ?.toDate()
+                      .toLocaleString()}
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
-    </div>
+    </Layout>
+
   );
 }
 

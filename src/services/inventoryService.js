@@ -15,23 +15,29 @@ import app from "../firebase/config";
 const db = getFirestore(app);
 
 // obtener inventario
-export const getInventory = async (type) => {
+export const getInventory =
+  async (type) => {
 
-  const ref =
-    doc(db, "inventory", type);
+    const ref =
+      doc(
+        db,
+        "inventory",
+        type
+      );
 
-  const snapshot =
-    await getDoc(ref);
+    const snapshot =
+      await getDoc(ref);
 
-  if (snapshot.exists()) {
+    if (snapshot.exists()) {
 
-    return snapshot.data();
+      return snapshot.data();
 
-  } else {
+    }
 
-    return { stock: 0 };
+    return {
+      stock: 0,
+    };
 
-  }
 };
 
 // agregar stock
@@ -43,7 +49,11 @@ export const addStock =
   ) => {
 
     const ref =
-      doc(db, "inventory", type);
+      doc(
+        db,
+        "inventory",
+        type
+      );
 
     await setDoc(
       ref,
@@ -56,24 +66,34 @@ export const addStock =
         updatedAt:
           new Date(),
       },
-      { merge: true }
+      {
+        merge: true,
+      }
     );
+
     await addDoc(
-  collection(db, "inventoryHistory"),
-  {
-    movement: "entrada",
+      collection(
+        db,
+        "inventoryHistory"
+      ),
+      {
+        movement:
+          "entrada",
 
-    type,
+        type,
 
-    quantity,
+        quantity,
 
-    supplier,
+        supplier,
 
-    user: "Admin",
+        user:
+          "Admin",
 
-    createdAt: new Date(),
-  }
-);
+        createdAt:
+          new Date(),
+      }
+    );
+
 };
 
 // descontar stock
@@ -84,33 +104,51 @@ export const removeStock =
   ) => {
 
     const ref =
-      doc(db, "inventory", type);
+      doc(
+        db,
+        "inventory",
+        type
+      );
 
-    await updateDoc(ref, {
+    await updateDoc(
+      ref,
+      {
+        stock:
+          increment(
+            -quantity
+          ),
+      }
+    );
 
-      stock:
-        increment(-quantity),
-
-    });
     await addDoc(
-  collection(db, "inventoryHistory"),
-  {
-    movement: "salida",
+      collection(
+        db,
+        "inventoryHistory"
+      ),
+      {
+        movement:
+          "salida",
 
-    type,
+        type,
 
-    quantity,
+        quantity,
 
-    user:
-      JSON.parse(
-        localStorage.getItem("seller")
-      )?.name || "Admin",
+        user:
+          JSON.parse(
+            localStorage.getItem(
+              "seller"
+            )
+          )?.name ||
+          "Admin",
 
-    createdAt:
-      new Date(),
-  }
-);
+        createdAt:
+          new Date(),
+      }
+    );
+
 };
+
+// historial inventario
 export const getInventoryHistory =
   async () => {
 
@@ -128,4 +166,26 @@ export const getInventoryHistory =
         ...doc.data(),
       })
     );
+
+};
+
+// obtener todo inventario
+export const getAllInventory =
+  async () => {
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "inventory"
+        )
+      );
+
+    return snapshot.docs.map(
+      (doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })
+    );
+
 };
