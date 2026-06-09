@@ -8,10 +8,10 @@ import DashboardPage from "./pages/DashboardPage";
 import SalesPage from "./pages/SalesPage";
 import InventoryPage from "./pages/InventoryPage";
 import CashPage from "./pages/CashPage";
-import SellerLoginPage from "./pages/SellerLoginPage";
-import FisePage from "./pages/FisePage";
-import FinancePage from "./pages/FinancePage";
-import ProductsPage from "./pages/ProductsPage";
+
+import DispatchPage from "./pages/DispatchPage";
+import SellerInventoryPage from "./pages/SellerInventoryPage";
+import ReportsPage from "./pages/ReportsPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -27,7 +27,7 @@ function App() {
         element={<LoginPage />}
       />
 
-      {/* DASHBOARD */}
+      {/* DASHBOARD ADMIN */}
       <Route
         path="/dashboard"
         element={
@@ -37,7 +37,7 @@ function App() {
         }
       />
 
-      {/* INVENTARIO */}
+      {/* INVENTARIO GENERAL */}
       <Route
         path="/inventory"
         element={
@@ -47,22 +47,32 @@ function App() {
         }
       />
 
-      {/* PRODUCTOS */}
+      {/* DESPACHO A VENDEDORES */}
       <Route
-        path="/products"
+        path="/dispatch"
         element={
           <ProtectedRoute adminOnly={true}>
-            <ProductsPage />
+            <DispatchPage />
           </ProtectedRoute>
         }
       />
 
-      {/* FINANZAS */}
+      {/* CAJA / INVENTARIO VENDEDORES */}
       <Route
-        path="/finance"
+        path="/seller-inventory"
         element={
           <ProtectedRoute adminOnly={true}>
-            <FinancePage />
+            <SellerInventoryPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* REPORTES */}
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <ReportsPage />
           </ProtectedRoute>
         }
       />
@@ -77,26 +87,14 @@ function App() {
         }
       />
 
-      {/* FISE */}
-      <Route
-        path="/fise"
-        element={
-          <ProtectedRoute>
-            <FisePage />
-          </ProtectedRoute>
-        }
-      />
-
       {/* VENTAS */}
       <Route
         path="/sales"
-        element={<SalesPage />}
-      />
-
-      {/* LOGIN VENDEDOR */}
-      <Route
-        path="/seller-login"
-        element={<SellerLoginPage />}
+        element={
+          <ProtectedRoute>
+            <SalesPage />
+          </ProtectedRoute>
+        }
       />
 
     </Routes>

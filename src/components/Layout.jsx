@@ -9,6 +9,7 @@ import {
   Moon,
   Sun,
   DollarSign,
+  BarChart3,
 } from "lucide-react";
 
 import {
@@ -35,7 +36,9 @@ function Layout({ children }) {
     );
 
   const user =
-    localStorage.getItem("user");
+    JSON.parse(
+      localStorage.getItem("user")
+    );
 
   const handleLogout = () => {
 
@@ -68,6 +71,7 @@ function Layout({ children }) {
 
         <div>
 
+          {/* LOGO */}
           <div className="mb-10">
 
             <h1 className="text-4xl font-extrabold tracking-wide">
@@ -80,10 +84,13 @@ function Layout({ children }) {
 
           </div>
 
+          {/* MENÚ */}
           <nav className="space-y-4">
 
+            {/* ADMINISTRADOR */}
             {user && (
               <>
+
                 <Link
                   to="/dashboard"
                   className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
@@ -97,39 +104,72 @@ function Layout({ children }) {
                   className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
                 >
                   <Package size={20} />
-                  Inventario
+                  Inventario General
                 </Link>
 
                 <Link
-                  to="/products"
+                  to="/dispatch"
                   className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
                 >
                   <Boxes size={20} />
-                  Productos
+                  Despacho
                 </Link>
 
                 <Link
-                  to="/finance"
+                  to="/seller-inventory"
                   className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
                 >
                   <DollarSign size={20} />
-                  Finanzas
+                  Caja Vendedores
                 </Link>
+
+                <Link
+                  to="/reports"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <BarChart3 size={20} />
+                  Reportes
+                </Link>
+
               </>
             )}
 
-            <Link
-              to="/sales"
-              className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
-            >
-              <ShoppingCart size={20} />
-              Ventas
-            </Link>
+            {/* VENDEDOR */}
+            {seller && (
+              <>
+
+                <Link
+                  to="/sales"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <ShoppingCart size={20} />
+                  Registrar Ventas
+                </Link>
+
+                <Link
+                  to="/my-inventory"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <Package size={20} />
+                  Mi Inventario
+                </Link>
+
+                <Link
+                  to="/cash"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <DollarSign size={20} />
+                  Mi Caja
+                </Link>
+
+              </>
+            )}
 
           </nav>
 
         </div>
 
+        {/* LOGOUT */}
         <button
           onClick={handleLogout}
           className="flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 transition px-4 py-4 rounded-xl w-full font-semibold"
@@ -140,7 +180,7 @@ function Layout({ children }) {
 
       </div>
 
-      {/* MOBILE BUTTON */}
+      {/* BOTÓN MÓVIL */}
       <button
         onClick={() =>
           setOpen(!open)
@@ -221,13 +261,7 @@ function Layout({ children }) {
                     : "text-gray-800"
                 }`}
               >
-
-                {
-                  seller?.name
-                    ? seller.name
-                    : "Administrador"
-                }
-
+                {seller?.name || "Administrador"}
               </p>
 
               <p
@@ -251,7 +285,9 @@ function Layout({ children }) {
         </header>
 
         <main className="p-8">
+
           {children}
+
         </main>
 
       </div>
