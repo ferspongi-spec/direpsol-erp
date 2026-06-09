@@ -34,6 +34,9 @@ function Layout({ children }) {
       localStorage.getItem("seller")
     );
 
+  const user =
+    localStorage.getItem("user");
+
   const handleLogout = () => {
 
     localStorage.removeItem("user");
@@ -65,7 +68,6 @@ function Layout({ children }) {
 
         <div>
 
-          {/* LOGO */}
           <div className="mb-10">
 
             <h1 className="text-4xl font-extrabold tracking-wide">
@@ -78,12 +80,10 @@ function Layout({ children }) {
 
           </div>
 
-          {/* MENU */}
           <nav className="space-y-4">
 
-            {
-              seller?.role === "admin" && (
-
+            {user && (
+              <>
                 <Link
                   to="/dashboard"
                   className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
@@ -92,8 +92,31 @@ function Layout({ children }) {
                   Dashboard
                 </Link>
 
-              )
-            }
+                <Link
+                  to="/inventory"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <Package size={20} />
+                  Inventario
+                </Link>
+
+                <Link
+                  to="/products"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <Boxes size={20} />
+                  Productos
+                </Link>
+
+                <Link
+                  to="/finance"
+                  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
+                >
+                  <DollarSign size={20} />
+                  Finanzas
+                </Link>
+              </>
+            )}
 
             <Link
               to="/sales"
@@ -103,40 +126,10 @@ function Layout({ children }) {
               Ventas
             </Link>
 
-            {
-  seller?.role === "admin" && (
-
-    <>
-      <Link
-        to="/inventory"
-        className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
-      >
-        <Package size={20} />
-        Inventario
-      </Link>
-<Link
-  to="/products"
-  className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
->
-  <Boxes size={20} />
-  Productos
-</Link>
-      <Link
-        to="/finance"
-        className="flex items-center gap-3 hover:bg-white/10 transition p-4 rounded-xl font-medium"
-      >
-        <DollarSign size={20} />
-        Finanzas
-      </Link>
-    </>
-
-  )
-}
           </nav>
 
         </div>
 
-        {/* LOGOUT */}
         <button
           onClick={handleLogout}
           className="flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 transition px-4 py-4 rounded-xl w-full font-semibold"
@@ -166,7 +159,6 @@ function Layout({ children }) {
       {/* CONTENIDO */}
       <div className="flex-1">
 
-        {/* HEADER */}
         <header
           className={`shadow-sm px-8 py-4 flex items-center justify-between ${
             darkMode
@@ -201,7 +193,6 @@ function Layout({ children }) {
 
           <div className="flex items-center gap-4">
 
-            {/* DARK MODE */}
             <button
               onClick={() =>
                 setDarkMode(!darkMode)
@@ -221,7 +212,6 @@ function Layout({ children }) {
 
             </button>
 
-            {/* USER */}
             <div className="text-right">
 
               <p
@@ -233,8 +223,9 @@ function Layout({ children }) {
               >
 
                 {
-                  seller?.name ||
-                  "Administrador"
+                  seller?.name
+                    ? seller.name
+                    : "Administrador"
                 }
 
               </p>
@@ -246,29 +237,21 @@ function Layout({ children }) {
                     : "text-gray-500"
                 }`}
               >
-
                 {new Date().toLocaleDateString()}
-
               </p>
 
             </div>
 
-            {/* AVATAR */}
             <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold">
-
               D
-
             </div>
 
           </div>
 
         </header>
 
-        {/* BODY */}
         <main className="p-8">
-
           {children}
-
         </main>
 
       </div>

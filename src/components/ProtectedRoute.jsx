@@ -22,10 +22,10 @@ function ProtectedRoute({
 
   }
 
-  // solo admin
+  // rutas solo admin
   if (
     adminOnly &&
-    seller?.role !== "admin"
+    !user
   ) {
 
     return <Navigate to="/sales" />;
@@ -33,6 +33,7 @@ function ProtectedRoute({
   }
 
   return children;
+
 }
 
 export default ProtectedRoute;
